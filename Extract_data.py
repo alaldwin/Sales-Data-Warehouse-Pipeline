@@ -37,8 +37,6 @@ def ignestion_data():
 
     shape = df.shape
 
-    print(df.columns.tolist())
-
     logging.info("Data ingestion info completed successfully.")
 
     return {
@@ -58,15 +56,17 @@ def Transform_data(df):
 
     df = df.copy()
 
-    df["OrderID"] = df["OrderID"].str.replace(r"^ORD", "", regex=True).astype("int64")
+    df.columns = df.columns.str.lower()
 
-    df["OrderDate"] = pd.to_datetime(df["OrderDate"], format="%Y-%m-%d")
+    df['orderid'] = df["orderid"].str.replace(r"^ORD", "", regex=True).astype(int)
 
-    df["CustomerID"] = df["CustomerID"].str.replace(r"^CUST", "", regex=True).astype("int64")
+    df['orderdate'] = pd.to_datetime(df["orderdate"], format="%Y-%m-%d")
 
-    df["ProductID"] = df["ProductID"].str.replace(r"^P", "", regex=True).astype("int64")
+    df['customerid'] = df["customerid"].str.replace(r"^CUST", "", regex=True).astype(int)
 
-    df["SellerID"] = df["SellerID"].str.replace(r"^SELL", "", regex=True).astype("int64")
+    df['productid'] = df["productid"].str.replace(r"^P", "", regex=True).astype(int)
+
+    df['sellerid'] = df["sellerid"].str.replace(r"^SELL", "", regex=True).astype(int)
 
     logging.info("Data transformation completed successfully.")
 
@@ -90,6 +90,11 @@ def load_data(df_transformed):
     engine = create_engine(database_url)
 
     logging.info("Database connection established successfully.")
+
+    print(df_transformed.columns.tolist())
+
+    duplicates = df_transformed.columns[df_transformed.columns.duplicated()]
+    print("Duplicate columns:", duplicates.tolist())
 
     inspector = inspect(engine)
 
