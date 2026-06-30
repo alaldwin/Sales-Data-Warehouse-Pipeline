@@ -39,3 +39,24 @@ GROUP BY
 ORDER BY
     d.year,
     d.month_name;
+
+
+
+
+
+-- Yearly Sales
+
+SELECT
+	RANK() OVER (
+		ORDER BY SUM(o.totalamount)
+	) AS yearly_sales_rank,
+	d.year,
+	SUM(o.totalamount) AS yearly_sales
+FROM star_schema.fact_orders AS o
+INNER JOIN star_schema.dim_date AS d
+	ON o.orderdate = d.dateid
+GROUP BY
+	d.year
+ORDER BY 
+	yearly_sales_rank ASC;
+
