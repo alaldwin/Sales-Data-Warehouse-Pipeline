@@ -1,6 +1,3 @@
-SELECT * FROM amazon
-
-
 DROP SCHEMA IF EXISTS star_schema CASCADE;
 
 CREATE SCHEMA star_schema;
@@ -134,7 +131,7 @@ SELECT * FROM star_schema.dim_seller
 DROP TABLE IF EXISTS star_schema.dim_date CASCADE;
 
 CREATE TABLE star_schema.dim_date (
-    date_id DATE PRIMARY KEY,
+    dateid DATE PRIMARY KEY,
     year INT NOT NULL,
     month INT NOT NULL,
     day INT NOT NULL,
@@ -146,7 +143,7 @@ CREATE TABLE star_schema.dim_date (
 TRUNCATE TABLE star_schema.dim_date CASCADE;
 
 INSERT INTO star_schema.dim_date (
-    date_id,
+    dateid,
     year,
     month,
     day,
@@ -156,7 +153,7 @@ INSERT INTO star_schema.dim_date (
 )
 
 SELECT DISTINCT
-    orderdate::date AS order_date,
+    orderdate::date AS orderid,
     EXTRACT(YEAR FROM orderdate)::INT AS year,
     EXTRACT(MONTH FROM orderdate)::INT AS month,
     EXTRACT(DAY FROM orderdate)::INT AS day,
@@ -193,17 +190,17 @@ CREATE TABLE star_schema.fact_orders (
 	totalamount DECIMAL(10, 2),
 	paymentmethod VARCHAR(50),
 	orderstatus  VARCHAR(50),
-	updated_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	load_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY(customerid)REFERENCES star_schema.dim_customer(customerid),
 	FOREIGN KEY(productid)REFERENCES star_schema.dim_product(productid),
 	FOREIGN KEY(sellerid)REFERENCES star_schema.dim_seller(sellerid),
-	FOREIGN KEY(orderdate)REFERENCES star_schema.dim_date(date_id)
+	FOREIGN KEY(orderdate)REFERENCES star_schema.dim_date(dateid)
 );
 
 TRUNCATE TABLE star_schema.fact_orders CASCADE;
 
 INSERT INTO star_schema.fact_orders (
- orderid,
+ 	orderid,
     customerid,
     productid,
     sellerid,
