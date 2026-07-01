@@ -29,26 +29,27 @@ ORDER BY
 -- Monthly Sales Trend
 
 SELECT
-	ROW_NUMBER() OVER (
-		PARTITION BY d.year
-		ORDER BY d.year, d.month_name
-		ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-	) AS number_rows,
 	d.year,
+	d.month,
 	d.month_name,
-	SUM(o.totalamount) AS monthly_sales
+	SUM(fo.totalamount) AS monthly_sales,
+	LAG(SUM(fo.totalamount)) OVER (
+		PARTITION BY d.year
+		ORDER BY d.month
+	) AS previous_month_sales
 FROM 
-	star_schema.fact_orders AS o
+	star_schema.fact_orders AS fo
 INNER JOIN 
 	star_schema.dim_date AS d
     ON 
-		o.orderdate = d.dateid
+		fo.orderdate = d.dateid
 GROUP BY
     d.year,
+	d.month,
     d.month_name
 ORDER BY
     d.year,
-    d.month_name;
+	d.month;
 
 
 
@@ -73,3 +74,35 @@ GROUP BY
 ORDER BY 
 	yearly_sales_rank ASC;
 
+
+
+
+
+-- Top 10 Products by Sales
+
+WITH ranked_sales AS (
+	SELECT
+		RANK() OVER (
+			ORDER BY SUM(fo.totalamount) DESC
+		) AS sales_rank,
+		dp.productname,
+		SUM(fo.totalamount) AS total_sales,
+		SUM(SUM(fo.totalamount)) OVER (
+			ORDER BY SUM(fo.totalamount) DESC
+		) AS cumulative_sales
+	FROM 
+		star_schema.fact_orders AS fo
+	INNER JOIN 
+		star_schema.dim_product AS dp
+		ON 
+			fo.productid = dp.productid
+	GROUP BY 
+		dp.productname
+)
+SELECT *
+FROM
+	ranked_sales
+WHERE 
+	sales_rank <= 10
+ORDER BY 
+	total_sales ASC;
